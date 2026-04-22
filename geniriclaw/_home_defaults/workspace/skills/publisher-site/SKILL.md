@@ -143,7 +143,7 @@ sudo htpasswd -c /etc/nginx/studio.htpasswd operator
 
 ## Face REFs на сайте
 
-Если проект использует image2image с face reference (см. `grsai-api`), референсные фото **обязательно публикуются** на сайте (для подстановки URL в API):
+Если проект использует image2image с face reference (см. `nano-banana-openrouter`), референсные фото **обязательно публикуются** на сайте (для подстановки URL в API):
 
 ```
 /var/www/{{YOUR_DOMAIN}}/faces/

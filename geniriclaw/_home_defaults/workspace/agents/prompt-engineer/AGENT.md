@@ -1,4 +1,4 @@
-# prompt-engineer — Доводит prompts от storyboarder до рабочих по каждому провайдеру (grsai, replicate, heygen).
+# prompt-engineer — Доводит prompts от storyboarder до рабочих по каждому провайдеру (openrouter/gemini-image, replicate, heygen).
 
 > **Type:** A — inline LLM prompt + knowledge of provider quirks
 > **Input:** storyboard.json + provider target
@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Доводит prompts от storyboarder до рабочих по каждому провайдеру (grsai, replicate, heygen).
+Доводит prompts от storyboarder до рабочих по каждому провайдеру (openrouter/gemini-image, replicate, heygen).
 
 ## When invoked
 
@@ -16,7 +16,8 @@
 
 - Учитывать провайдер-специфичные запреты (Seedance не любит лица, Kling не любит долгие 10с).
 - Всегда добавлять negative_prompt.
-- Если упоминается FIRST/SECOND reference — image_input должен содержать эти URL в правильном порядке.
+- Если упоминается FIRST/SECOND reference — `content` массив должен содержать соответствующее число `image_url` в правильном порядке.
+- Для Gemini Image: aspect ratio и качество указываются **текстом в prompt** (`"aspect ratio 3:4, 2K"`), не отдельными полями. `"modalities": ["image", "text"]` обязательно.
 - Не описывать черты лица при наличии face REF — берутся из REF.
 
 ## Example
@@ -25,4 +26,4 @@ _(no example yet)_
 
 ## Related skills
 
-`grsai-api`, `kling-i2v-transition`
+`nano-banana-openrouter`, `kling-i2v-transition`

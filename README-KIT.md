@@ -10,7 +10,7 @@
 
 | Skill | Назначение |
 |-------|-----------|
-| [`grsai-api`](geniriclaw/_home_defaults/workspace/skills/grsai-api/SKILL.md) | Генерация изображений через GRSAI (nano-banana семейство) — с face reference или text2img |
+| [`nano-banana-openrouter`](geniriclaw/_home_defaults/workspace/skills/nano-banana-openrouter/SKILL.md) | Генерация изображений через OpenRouter (Gemini Image / Nano Banana + Nano Banana Pro) — img2img с face reference, multi-ref, text2img |
 | [`kling-i2v-transition`](geniriclaw/_home_defaults/workspace/skills/kling-i2v-transition/SKILL.md) | Image→Video через Kling v2.1 (Replicate), включая start→end morph-переходы |
 | [`video-pipeline`](geniriclaw/_home_defaults/workspace/skills/video-pipeline/SKILL.md) | End-to-end сборка ролика: script → storyboard → images → videos → voice → music → edit → publish |
 | [`video-revision-pipeline`](geniriclaw/_home_defaults/workspace/skills/video-revision-pipeline/SKILL.md) | Итеративные правки уже смонтированного ролика со style-anchor'ом |
@@ -50,7 +50,7 @@
 - `prompt-engineer` — адаптация prompts под провайдеров
 
 **Generation (subprocess scripts):**
-- `image-gen` — через GRSAI
+- `image-gen` — через OpenRouter (Gemini Image / Nano Banana)
 - `video-gen` — через Kling
 - `voice-over` — через ElevenLabs / OpenAI TTS
 - `music-scoring` — через Suno / library

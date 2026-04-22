@@ -12,7 +12,7 @@
 
 - Нужно автоматизировать публикации в канал без ручного ведения.
 - Есть контент-план или набор рубрик / тем.
-- Есть способ генерации контента (text + image) — через `grsai-api`, `video-pipeline`, LLM-агента.
+- Есть способ генерации контента (text + image) — через `nano-banana-openrouter`, `video-pipeline`, LLM-агента.
 
 ## Prerequisites
 
@@ -146,7 +146,7 @@ Example style:
 ```python
 prompt = read(rubric_file) + read(mood_file)
 text = llm_generate(prompt, max_chars=200)
-image = maybe_generate_image_via_grsai(text) if rubric.has_image else None
+image = maybe_generate_image_via_openrouter(text) if rubric.has_image else None
 ```
 
 ## Шаг 5 — Публикация + логирование

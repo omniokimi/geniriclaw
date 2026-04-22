@@ -6,7 +6,7 @@
 
 | Провайдер | Для чего | Env var | Цена / кадр | Сайт |
 |-----------|----------|---------|-------------|------|
-| **GRSAI** (nano-banana) | img2img с face REF, дёшево | `GRSAI_API_KEY` | $0.003–0.012 | [api.grsai.com](https://api.grsai.com) |
+| **OpenRouter** (Gemini Image / Nano Banana) | img2img с face REF, text2img, multi-ref | `OPENROUTER_API_KEY` | $0.003–0.08 | [openrouter.ai](https://openrouter.ai) |
 | **Krea AI** | реалистичные портреты | `KREA_API_KEY` | per image | [krea.ai](https://krea.ai) |
 | **Replicate** (любые модели) | универсальный gateway (Flux, SDXL, Ideogram) | `REPLICATE_API_TOKEN` | per model | [replicate.com](https://replicate.com) |
 
@@ -73,7 +73,7 @@
 
 ```bash
 # В /etc/environment на сервере (или в .env)
-GRSAI_API_KEY=<your-key>
+OPENROUTER_API_KEY=<your-key>           # Gemini Image / Nano Banana / любые LLM
 REPLICATE_API_TOKEN=<your-token>
 ELEVENLABS_API_KEY=<your-key>
 SONIOX_API_KEY=<your-key>
@@ -83,7 +83,7 @@ OPENAI_API_KEY=<your-key>
 
 **Не все нужны сразу.** Минимальный starting-set:
 - `CLAUDE_CODE_OAUTH_TOKEN` (для LLM — обязательно)
-- `GRSAI_API_KEY` **или** `REPLICATE_API_TOKEN` (image generation)
+- `OPENROUTER_API_KEY` **или** `REPLICATE_API_TOKEN` (image generation)
 - Telegram bot token (publishing)
 
 Остальные — по мере необходимости.

@@ -168,5 +168,5 @@ ref: drafts/<job>/shots/shot_07_v3_after_shower_henley.png
 
 ## References
 
-- Related: `video-revision-pipeline`, `storyboard-designer`, `grsai-api`
+- Related: `video-revision-pipeline`, `storyboard-designer`, `nano-banana-openrouter`
 - Best practice: «one rejected result = one lesson extracted = one prompt update»

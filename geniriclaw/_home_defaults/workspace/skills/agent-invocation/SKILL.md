@@ -45,8 +45,8 @@ role = read("agents/scriptwriter/AGENT.md")
 Для этих — **реальные скрипты** в `scripts/` или в `agents/<name>/`:
 
 ```bash
-# image-gen через grsai
-python3 workspace/scripts/gen_image_via_grsai.py \
+# image-gen через OpenRouter (Gemini Image / Nano Banana)
+python3 workspace/scripts/gen_image_via_openrouter.py \
     --prompt "..." --ref-url "..." --output drafts/<job>/shots/shot_01.png
 
 # editor — ffmpeg concat

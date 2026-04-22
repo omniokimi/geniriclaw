@@ -2,11 +2,11 @@
 
 > **Status:** stable
 > **Category:** content-production · pre-production
-> **Depends on:** `grsai-api`, опционально `publisher-site` для HTML-дайджеста
+> **Depends on:** `nano-banana-openrouter`, опционально `publisher-site` для HTML-дайджеста
 
 ## Purpose
 
-Перед тратой $0.012/кадр на финальный рендер — дешёво (~$0.003/кадр) прогнать раскадровку в sketch-mode, получить одобрение оператора, потом тратить на finals только то что одобрено.
+Перед тратой $0.04–0.08/кадр на финальный рендер (Nano Banana Pro) — дешёво (~$0.003–0.005/кадр на Nano Banana Flash) прогнать раскадровку в sketch-mode, получить одобрение оператора, потом тратить на finals только то что одобрено.
 
 ## Workflow
 
@@ -29,18 +29,19 @@ clean line art, minimal shading, <scene description>,
 16:9 aspect ratio framing
 ```
 
-### Параметры API (grsai-api)
+### Параметры API (nano-banana-openrouter)
 
 ```json
 {
-  "model": "nano-banana-fast",
-  "aspectRatio": "16:9",
-  "imageSize": "1K",
-  "webHook": "-1"
+  "model": "google/gemini-2.5-flash-image",
+  "modalities": ["image", "text"],
+  "messages": [
+    {"role": "user", "content": "<sketch prompt with '16:9 aspect ratio, 1K' in text>"}
+  ]
 }
 ```
 
-**Нет** `image_input` — sketch рисуется без face REF.
+**Нет** `image_url` в content — sketch рисуется без face REF. Aspect ratio и качество пишутся **текстом в prompt**, не отдельными полями (у Gemini Image нет `aspectRatio`/`imageSize`).
 
 ### Стиль
 
@@ -52,15 +53,21 @@ clean line art, minimal shading, <scene description>,
 
 ```json
 {
-  "model": "nano-banana-pro",
-  "aspectRatio": "9:16",  // или 16:9 — под платформу
-  "imageSize": "2K",
-  "webHook": "-1",
-  "image_input": ["<FACE_REF_URL>"]
+  "model": "google/gemini-3-pro-image-preview",
+  "modalities": ["image", "text"],
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {"type": "text", "text": "<full color prompt with '9:16 aspect ratio, 2K' in text>"},
+        {"type": "image_url", "image_url": {"url": "<FACE_REF_URL>"}}
+      ]
+    }
+  ]
 }
 ```
 
-Prompt — цветной, детальный, с описанием света и стиля (см. `grsai-api/SKILL.md`).
+Prompt — цветной, детальный, с описанием света и стиля (см. `nano-banana-openrouter/SKILL.md`).
 
 ## storyboard.json — структурированный формат
 
@@ -125,10 +132,10 @@ Prompt — цветной, детальный, с описанием света 
 
 ## Rules
 
-- **Sketch mode всегда 1K fast** — задача проверить композицию, не detail. Тратить на sketches $0.012/кадр — перерасход.
+- **Sketch mode всегда Nano Banana Flash** (`google/gemini-2.5-flash-image`) — задача проверить композицию, не detail. Тратить на sketches Pro-модель — перерасход.
 - **Нет face REF в sketch** — без разницы кто на кадре, сюжет важнее.
 - **Если оператор просит перерисовать shot** — перерисовывать sketch, не final. Обновлять final только когда sketch одобрен.
-- Parallelism 4 одновременно на sketch, 3 — на final (grsai rate-limit).
+- Parallelism 4 одновременно на sketch, 3 — на final (OpenRouter рейт-лимит обычно либеральный, но Pro-модель медленнее — не перегружай).
 - HTML preview **включает prompt под каждым shot'ом** — оператор видит что модель «понимает», может править семантику.
 
 ## Config placeholders
@@ -150,4 +157,4 @@ Prompt — цветной, детальный, с описанием света 
 
 ## References
 
-- Related: `grsai-api`, `video-pipeline`, `video-revision-pipeline`, `publisher-site`
+- Related: `nano-banana-openrouter`, `video-pipeline`, `video-revision-pipeline`, `publisher-site`

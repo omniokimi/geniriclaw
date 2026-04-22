@@ -2,7 +2,7 @@
 
 > **Status:** stable
 > **Category:** content-production · orchestration
-> **Depends on:** `grsai-api`, `kling-i2v-transition`, `storyboard-designer`, `publisher-site`
+> **Depends on:** `nano-banana-openrouter`, `kling-i2v-transition`, `storyboard-designer`, `publisher-site`
 
 ## Purpose
 
@@ -19,7 +19,7 @@
 2. Script (scriptwriter)  → 30–60с текст, hooks, CTA
 3. Storyboard (storyboarder) → 6–12 shots с описанием
 4. Prompt engineering  → image+motion prompts + negative prompts
-5. Image generation    → grsai-api / replicate (batch параллель)
+5. Image generation    → nano-banana-openrouter / replicate (batch параллель)
 6. Image → Video       → kling-i2v-transition (параллель, 3-4 одновременно)
 7. Voice-over          → ElevenLabs / OpenAI TTS
 8. Music scoring       → Suno / library track
@@ -30,7 +30,7 @@
 
 **Принцип `fallback-first, autopilot-by-default, downgrade-before-stop`:**
 
-- Если **image-gen провалился** → 1 retry с упрощённым prompt; не получилось → понизить модель (`pro` → `2` → `fast`); не получилось → помечаем shot как `still` и идём дальше.
+- Если **image-gen провалился** → 1 retry с упрощённым prompt; не получилось → понизить модель (`google/gemini-3-pro-image-preview` → `google/gemini-2.5-flash-image`); не получилось → помечаем shot как `still` и идём дальше.
 - Если **i2v провалился** → 1 retry с `minimal motion` prompt; не получилось → оставляем still image на длительность shot'а (concat как statischen клип через ffmpeg).
 - Если **voice/music провалился** → продолжаем без (silent preview), эскалируем оператору.
 - Блокер эскалируется **только** когда результат без него нельзя собрать вообще.
@@ -39,7 +39,7 @@
 
 | Этап | Параллелизм | Почему |
 |------|-------------|--------|
-| Image generation | 4–6 одновременно | GRSAI rate-limit ~10/мин |
+| Image generation | 4–6 одновременно | OpenRouter rate-limit зависит от баланса, обычно либеральный |
 | I2V Kling | 3–4 одновременно | Replicate fair-use |
 | Voice segments | 2–3 | ElevenLabs rate-limit |
 | FFmpeg | 1 (последовательно) | CPU-bound |
@@ -94,5 +94,5 @@ workspace/drafts/{{JOB_ID}}/
 
 ## References
 
-- Related skills: `grsai-api`, `kling-i2v-transition`, `storyboard-designer`, `video-revision-pipeline`, `directors-cut-pipeline`, `learning-loop`, `publisher-site`
+- Related skills: `nano-banana-openrouter`, `kling-i2v-transition`, `storyboard-designer`, `video-revision-pipeline`, `directors-cut-pipeline`, `learning-loop`, `publisher-site`
 - Agents: `scriptwriter`, `storyboarder`, `prompt-engineer`, `image-gen`, `video-gen`, `voice-over`, `music-scoring`, `editor`, `publisher-multi`, `metrics-tracker`

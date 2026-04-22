@@ -37,7 +37,7 @@ stages:
 
   - id: prompt_engineering
     agent: prompt-engineer
-    description: "Адаптация prompts под grsai / replicate."
+    description: "Адаптация prompts под openrouter (gemini-image) / replicate."
     input: drafts/<job>/storyboard.json
     output: drafts/<job>/prompts/
     checkpoint: autopilot

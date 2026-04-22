@@ -188,7 +188,7 @@ Strongly recommended: run inside a Docker container.
 - **`skills/`** — 14 enterprise скилов для content-production и meta-behavior. Claude Code CLI видит их автоматически через sync → при разговоре можно вызывать `/skill-name` или просто ссылаться по назначению.
 - **`agents/`** — 12 L2-ролей (scriptwriter, image-gen, video-gen, editor, publisher-multi и т.д.). Используются внутри pipeline, агент играет роль читая `AGENT.md`.
 - **`orchestrator/pipeline.yaml`** — декларативное описание видео-production pipeline. Orchestrator читает и запускает stages.
-- **`references/providers/README.md`** — справочник API (GRSAI, Replicate/Kling, HeyGen, ElevenLabs, Soniox, Ayrshare). Ключи в env, см. ниже.
+- **`references/providers/README.md`** — справочник API (OpenRouter/Gemini Image, Replicate/Kling, HeyGen, ElevenLabs, Soniox, Ayrshare). Ключи в env, см. ниже.
 - **`templates/publish/publish.sh`** — универсальная утилита публикации на собственный сайт.
 - **`templates/storyboard/storyboard.schema.json`** — schema для структурированной раскадровки.
 
@@ -198,7 +198,7 @@ Strongly recommended: run inside a Docker container.
 
 ```bash
 # /etc/environment (Linux) или ~/.zshrc (macOS)
-export GRSAI_API_KEY="<your-grsai-key>"          # image gen
+export OPENROUTER_API_KEY="sk-or-v1-..."         # image gen (Gemini / Nano Banana) + fallback LLM
 export REPLICATE_API_TOKEN="<your-replicate>"    # video (Kling)
 export ELEVENLABS_API_KEY="<your-eleven>"        # voice clone (опц.)
 export SONIOX_API_KEY="<your-soniox>"            # voice recognition (опц.)

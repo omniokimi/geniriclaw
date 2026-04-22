@@ -49,11 +49,11 @@
           },
           "sketch_prompt": {
             "type": "string",
-            "description": "B&W pencil sketch prompt для этапа одобрения (модель nano-banana-fast, 1K)"
+            "description": "B&W pencil sketch prompt для этапа одобрения (модель google/gemini-2.5-flash-image на OpenRouter, '1K' указывается в тексте prompt)"
           },
           "final_prompt": {
             "type": "string",
-            "description": "Цветной final prompt (модель nano-banana-pro, 2K)"
+            "description": "Цветной final prompt (модель google/gemini-3-pro-image-preview на OpenRouter, '2K' указывается в тексте prompt)"
           },
           "motion_prompt": {
             "type": "string",

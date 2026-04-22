@@ -23,11 +23,11 @@
 ### 1. Промежуточные sketches — 2 варианта на каждый правленый shot
 
 Перед финальной генерацией — **sketch-mode**:
-- 2 варианта low-res (`1K`, `nano-banana-fast`)
+- 2 варианта low-res (`google/gemini-2.5-flash-image`, в prompt пишем "1K draft")
 - Оператор выбирает направление (вариант A или B)
-- Только потом финальный `pro` 2K
+- Только потом финальный `google/gemini-3-pro-image-preview` (в prompt пишем "2K")
 
-Экономия: если направление неверное, тратим $0.006 на sketches вместо $0.024 на финал.
+Экономия: Flash-модель ~$0.003–0.005/кадр, Pro-модель ~$0.04–0.08/кадр — выигрыш 10×+ на этапе черновика.
 
 ### 2. Style anchor (визуальный ключ)
 
@@ -109,4 +109,4 @@ image_input:
 
 ## References
 
-- Related: `video-pipeline`, `storyboard-designer`, `grsai-api`, `kling-i2v-transition`, `learning-loop`
+- Related: `video-pipeline`, `storyboard-designer`, `nano-banana-openrouter`, `kling-i2v-transition`, `learning-loop`
