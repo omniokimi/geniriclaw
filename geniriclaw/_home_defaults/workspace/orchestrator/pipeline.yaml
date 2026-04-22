@@ -1,0 +1,137 @@
+# pipeline.yaml — декларативное описание стадий content-production pipeline
+#
+# Читается orchestrator'ом при запуске video-pipeline.
+# Каждая stage:
+#   - обращается к agents/<name>/AGENT.md для инструкции
+#   - записывает артефакт в drafts/<job>/<output>
+#   - имеет checkpoint (optional, см. checkpoints.md)
+#   - fallback: что делать при провале
+#   - parallel: сколько параллельных задач разрешено
+
+version: "1.0"
+
+stages:
+  - id: parse_brief
+    agent: (inline)
+    description: "Распарсить бриф: topic, duration, platforms, style, CTA."
+    input: brief.md
+    output: drafts/<job>/parsed.yaml
+    checkpoint: autopilot
+
+  - id: script
+    agent: scriptwriter
+    description: "Написать сценарий с таймингами."
+    input: drafts/<job>/parsed.yaml
+    output: drafts/<job>/script.md
+    checkpoint: control            # показать оператору перед переходом к storyboard
+    fallback:
+      - retry_with_shorter_narrative
+      - use_template_from_templates/script/
+
+  - id: storyboard
+    agent: storyboarder
+    description: "Раскадровка в sketch и final prompts."
+    input: drafts/<job>/script.md
+    output: drafts/<job>/storyboard.json
+    checkpoint: autopilot
+
+  - id: prompt_engineering
+    agent: prompt-engineer
+    description: "Адаптация prompts под grsai / replicate."
+    input: drafts/<job>/storyboard.json
+    output: drafts/<job>/prompts/
+    checkpoint: autopilot
+
+  - id: sketches
+    agent: image-gen
+    description: "Батч sketches (1K, fast, B&W) для approval."
+    input: drafts/<job>/prompts/*/sketch.yaml
+    output: drafts/<job>/sketches/
+    parallel: 4
+    checkpoint: control            # HTML preview → оператор одобряет направление
+
+  - id: images
+    agent: image-gen
+    description: "Финальная генерация 2K pro с face REF."
+    input: drafts/<job>/prompts/*/final.yaml
+    output: drafts/<job>/shots/
+    parallel: 4
+    checkpoint: autopilot
+    fallback:
+      - retry_simplified_prompt
+      - downgrade_model: nano-banana-2
+      - downgrade_model: nano-banana-fast
+      - mark_as_still
+
+  - id: videos
+    agent: video-gen
+    description: "image→video через Kling."
+    input: drafts/<job>/shots/*.png
+    output: drafts/<job>/videos/
+    parallel: 3
+    checkpoint: autopilot
+    fallback:
+      - retry_minimal_motion
+      - use_still_image_as_video
+
+  - id: voice
+    agent: voice-over
+    description: "Closed-caption voice-over."
+    input: drafts/<job>/script.md (narration per shot)
+    output: drafts/<job>/audio/voice.wav
+    parallel: 2
+    checkpoint: autopilot
+    fallback:
+      - switch_provider: openai_tts
+      - skip_and_log
+
+  - id: music
+    agent: music-scoring
+    description: "Фоновая музыка."
+    output: drafts/<job>/audio/music.mp3
+    checkpoint: autopilot
+    fallback:
+      - use_library_track
+
+  - id: edit
+    agent: editor
+    description: "FFmpeg concat + mix audio."
+    input: videos/ + audio/
+    output: drafts/<job>/build/final.mp4
+    checkpoint: control            # финал перед публикацией — показать оператору
+    fallback:
+      - rebuild_from_sources
+
+  - id: publish
+    agent: publisher-multi
+    description: "Мульти-канальная публикация."
+    input: drafts/<job>/build/final.mp4 + caption
+    output: drafts/<job>/published.json
+    checkpoint: control            # подтверждение перед публичной публикацией
+    parallel: per_platform
+
+  - id: metrics_plan
+    agent: metrics-tracker
+    description: "Schedule +24h metric collection."
+    input: drafts/<job>/published.json
+    output: cron_job registered
+    checkpoint: autopilot
+
+  - id: learning_loop
+    agent: (learning-loop skill)
+    description: "После +24h, собрать метрики, обновить prompt-packs."
+    input: drafts/<job>/metrics.json + revision.md
+    output: agents/*/EXAMPLES.md update, promptpack.yaml update
+    schedule: "+24h after publish"
+
+# Глобальные правила
+defaults:
+  face_consistency_required: true    # использовать face REF для всех кадров с человеком
+  i2v_motion_via_prompt_only: true   # editor не имитирует motion через ffmpeg
+  respect_rate_limits: true          # параллелизм согласован с провайдерами
+  delivery_check: true               # после публикации подтверждение по message_id
+
+execution_mode: autopilot_with_control_points
+# autopilot: идёт без confirm, оператор может перехватить на control checkpoint'ах
+# full_control: каждый stage требует confirm (медленно, но безопасно для нового pipeline)
+# full_autopilot: все checkpoint=autopilot, финал без confirm (для продакшн-flow, хорошо отлаженного)
