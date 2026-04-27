@@ -425,7 +425,16 @@ def _detect_posix_timezone() -> ZoneInfo | None:
         return None
 
 
-CLAUDE_MODELS_ORDERED: tuple[str, ...] = ("haiku", "sonnet", "opus")
+CLAUDE_MODELS_ORDERED: tuple[str, ...] = (
+    "haiku",
+    "sonnet",
+    "opus",
+    "claude-opus-4-7[1m]",
+    "claude-sonnet-4-6[1m]",
+    "claude-opus-4-7",
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5-20251001",
+)
 CLAUDE_MODELS: frozenset[str] = frozenset(CLAUDE_MODELS_ORDERED)
 
 # "auto" is a Gemini-specific alias (Gemini CLI auto-selects the best model).
