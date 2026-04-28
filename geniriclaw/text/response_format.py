@@ -196,9 +196,9 @@ def startup_notification_text(kind: str) -> str:
     ``service_restart`` is silent (handled by the existing sentinel system).
     """
     if kind == "first_start":
-        return fmt(t("startup.first_start_header"), SEP, random.choice(_FIRST_START_PHRASES))
+        return random.choice(_FIRST_START_PHRASES)
     if kind == "system_reboot":
-        return fmt(t("startup.reboot_header"), SEP, random.choice(_REBOOT_PHRASES))
+        return random.choice(_REBOOT_PHRASES)
     return ""
 
 
