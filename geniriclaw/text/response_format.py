@@ -189,17 +189,109 @@ def timeout_result_text(elapsed: float, configured: float) -> str:
 # -- Startup lifecycle messages --
 
 
-def startup_notification_text(kind: str) -> str:
-    """Notification text for startup events.
+def _try_ai_contextual_greeting() -> str | None:
+    """Try to generate a memory-aware greeting via Claude CLI (v2.0 feature).
 
-    Only ``first_start`` and ``system_reboot`` produce output.
-    ``service_restart`` is silent (handled by the existing sentinel system).
+    Reads ``~/.geniriclaw/workspace/memory_system/MAINMEMORY.md`` and asks
+    Claude (via subprocess) to produce a 1–2 sentence Russian greeting that
+    references the last conversation context.  Result is cached in
+    ``~/.geniriclaw/state/last_greeting.json`` keyed by sha256 of MAINMEMORY,
+    so the network call only happens when memory actually changes.
+
+    Returns the greeting text, or ``None`` on any failure (caller falls back
+    to the random phrase pool).  Never raises.
     """
-    if kind == "first_start":
-        return random.choice(_FIRST_START_PHRASES)
-    if kind == "system_reboot":
-        return random.choice(_REBOOT_PHRASES)
-    return ""
+    import hashlib
+    import json
+    import os
+    import pathlib
+    import shutil
+    import subprocess
+
+    try:
+        home = pathlib.Path.home()
+        memory_path = home / ".geniriclaw" / "workspace" / "memory_system" / "MAINMEMORY.md"
+        cache_path = home / ".geniriclaw" / "state" / "last_greeting.json"
+
+        if not memory_path.is_file():
+            return None
+        memory_text = memory_path.read_text(encoding="utf-8", errors="ignore")
+        if len(memory_text.strip()) < 100:
+            return None
+
+        memory_hash = hashlib.sha256(memory_text.encode("utf-8")).hexdigest()
+        try:
+            if cache_path.is_file():
+                cache = json.loads(cache_path.read_text(encoding="utf-8"))
+                if cache.get("hash") == memory_hash and cache.get("greeting"):
+                    return str(cache["greeting"])
+        except Exception:
+            pass
+
+        claude_bin = shutil.which("claude") or "/usr/local/bin/claude"
+        if not pathlib.Path(claude_bin).exists():
+            return None
+
+        truncated = memory_text[:4000]
+        prompt = (
+            "Ты — личный ассистент пользователя. Сгенерируй ОДНО короткое "
+            "(1–2 предложения) тёплое приветствие на русском, в котором ты "
+            "ссылаешься на последний контекст разговора из памяти ниже. "
+            "Стиль — живой, личный, как у близкого помощника. ЗАПРЕЩЕНО "
+            "использовать слова: «снова», «в строю», «на связи», «вернулся», "
+            "«перезагрузка», «перезапуск», «восстановлен» (звучат как "
+            "поломка и починка). Не используй кавычки, эмодзи, markdown — "
+            "только текст приветствия.\n\nКонтекст памяти:\n" + truncated
+        )
+
+        env = os.environ.copy()
+        result = subprocess.run(
+            [claude_bin, "-p", prompt, "--model", "haiku"],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            timeout=20,
+            env=env,
+            check=False,
+        )
+        if result.returncode != 0:
+            return None
+        greeting = (result.stdout or "").strip().strip('"').strip("'")
+        if not greeting or len(greeting) > 400 or "\n\n" in greeting:
+            return None
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            cache_path.write_text(
+                json.dumps(
+                    {"hash": memory_hash, "greeting": greeting},
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+        return greeting
+    except Exception:
+        return None
+
+
+def startup_notification_text(kind: str) -> str:
+    """Notification text for startup events (v2.0).
+
+    - ``first_start``: tries to generate an AI greeting from MAINMEMORY,
+      falls back to a random phrase from ``_FIRST_START_PHRASES``.
+    - ``system_reboot`` / ``service_restart``: silent (empty string) —
+      avoids interrupting an ongoing conversation with a contextless
+      "I'm back" message. v1.0-light sent a reboot phrase; v2.0 keeps
+      reboots silent (use ``v1.0-light`` tag if you prefer the old behavior).
+    """
+    if kind != "first_start":
+        return ""
+    contextual = _try_ai_contextual_greeting()
+    if contextual:
+        return contextual
+    return random.choice(_FIRST_START_PHRASES)
 
 
 # -- Auto-recovery messages --
