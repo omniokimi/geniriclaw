@@ -16,6 +16,7 @@ from rich.console import Console
 # tests that patch geniriclaw.__main__.<name>.
 from geniriclaw.cli_commands.agents import cmd_agents as _cmd_agents
 from geniriclaw.cli_commands.api_cmd import cmd_api as _cmd_api
+from geniriclaw.cli_commands.camofox import cmd_camofox as _cmd_camofox
 from geniriclaw.cli_commands.docker import cmd_docker as _cmd_docker
 from geniriclaw.cli_commands.install import cmd_install as _cmd_install
 from geniriclaw.cli_commands.lifecycle import (
@@ -320,6 +321,7 @@ _COMMANDS: dict[str, str] = {
     "api": "api",
     "agents": "agents",
     "install": "install",
+    "camofox": "camofox",
 }
 
 _Action = Callable[[], None]
@@ -350,6 +352,7 @@ def main() -> None:
         "api": lambda: _cmd_api(args),
         "agents": lambda: _cmd_agents(args),
         "install": lambda: _cmd_install(args),
+        "camofox": lambda: _cmd_camofox(args),
     }
 
     handler = dispatch.get(action) if action else None
