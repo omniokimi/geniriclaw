@@ -177,6 +177,12 @@ class TasksConfig(BaseModel):
     enabled: bool = True
     max_parallel: int = 5
     timeout_seconds: float = 3600.0
+    # v2.0: when True, a user message arriving while a previous one is still
+    # being processed is dispatched as an independent background TaskHub task
+    # (new Claude session) instead of waiting in the per-chat lock queue.
+    # Off by default to preserve sequential single-thread chat semantics;
+    # turn on for power users who want OpenClaw-style parallel chat lanes.
+    parallel_chat_when_busy: bool = False
 
 
 class TimeoutConfig(BaseModel):

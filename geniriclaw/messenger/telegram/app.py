@@ -221,6 +221,8 @@ class TelegramBot:
         self._sequential.set_abort_handler(self._on_abort)
         self._sequential.set_abort_all_handler(self._on_abort_all)
         self._sequential.set_quick_command_handler(self._on_quick_command)
+        if self._config.tasks.parallel_chat_when_busy:
+            self._sequential.set_parallel_submitter(self._on_parallel_submit)
         on_rejected = self._on_group_rejected
         auth = AuthMiddleware(allowed, allowed_group_ids=allowed_groups, on_rejected=on_rejected)
         self._router.message.outer_middleware(auth)
@@ -813,6 +815,57 @@ class TelegramBot:
             return True
 
         await handle_command(self._orchestrator, self._bot, message)
+        return True
+
+    async def _on_parallel_submit(self, message: Message) -> bool:
+        """Dispatch a busy-chat user message as an independent TaskHub task (v2.0).
+
+        Used when ``tasks.parallel_chat_when_busy`` is enabled and the
+        per-chat lock is already held by an in-progress conversation.
+        Each parallel task gets its own Claude session; the result is
+        delivered back to the chat via ``on_task_result`` once ready.
+
+        Returns True if the message was accepted as a task, False to
+        fall back to the original sequential queue.
+        """
+        if self._orchestrator is None:
+            return False
+        text = await self._resolve_text(message)
+        if not text:
+            return False
+
+        from geniriclaw.messenger.telegram.topic import get_thread_id
+        from geniriclaw.tasks.models import TaskSubmit
+
+        try:
+            task_id = self._orch.task_hub.submit(
+                TaskSubmit(
+                    chat_id=message.chat.id,
+                    prompt=text,
+                    message_id=message.message_id,
+                    thread_id=get_thread_id(message),
+                    parent_agent=self._agent_name,
+                    name="",
+                )
+            )
+        except ValueError as e:
+            logger.info("Parallel submit rejected (%s); falling back to queue", e)
+            return False
+        except Exception:
+            logger.exception("Parallel submit failed; falling back to queue")
+            return False
+
+        try:
+            from aiogram.enums import ParseMode
+
+            await self._bot.send_message(
+                message.chat.id,
+                f"<blockquote>Беру в фоновую работу — задача <code>{task_id}</code>. Ответ придёт сюда, когда готово.</blockquote>",
+                parse_mode=ParseMode.HTML,
+                message_thread_id=get_thread_id(message),
+            )
+        except Exception:
+            logger.debug("Failed to send parallel-task ack", exc_info=True)
         return True
 
     async def _on_stop_all(self, message: Message) -> None:

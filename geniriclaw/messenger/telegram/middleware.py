@@ -48,6 +48,12 @@ AbortAllHandler = Callable[[int, "Message"], Awaitable[bool]]
 QuickCommandHandler = Callable[[int, "Message"], Awaitable[bool]]
 """Async callback for read-only commands that bypass the per-chat lock."""
 
+ParallelSubmitter = Callable[["Message"], Awaitable[bool]]
+"""Async callback for v2.0 parallel-when-busy mode: (message) -> dispatched?
+
+Returning True means the message has been accepted as a background task
+and the middleware should NOT enqueue it behind the per-chat lock."""
+
 QUICK_COMMANDS: frozenset[str] = frozenset(
     {
         "/status",
@@ -174,6 +180,7 @@ class SequentialMiddleware(BaseMiddleware):
         self._abort_handler: AbortHandler | None = None
         self._abort_all_handler: AbortAllHandler | None = None
         self._quick_command_handler: QuickCommandHandler | None = None
+        self._parallel_submitter: ParallelSubmitter | None = None
         self._pending: dict[int, list[_QueueEntry]] = {}
         self._entry_counter = 0
         self._bot: Bot | None = None
@@ -207,6 +214,16 @@ class SequentialMiddleware(BaseMiddleware):
     def set_quick_command_handler(self, handler: QuickCommandHandler) -> None:
         """Register a callback for read-only commands dispatched *before* the lock."""
         self._quick_command_handler = handler
+
+    def set_parallel_submitter(self, submitter: ParallelSubmitter | None) -> None:
+        """Register a callback for v2.0 parallel-when-busy mode (TaskHub-backed).
+
+        When set, messages arriving while the per-chat lock is held are
+        dispatched as independent background tasks (new Claude session)
+        instead of queuing behind the lock. ``None`` (default) preserves
+        the original sequential semantics.
+        """
+        self._parallel_submitter = submitter
 
     def get_lock(self, lock_key: tuple[int, int | None] | int) -> asyncio.Lock:
         """Return the per-session lock, creating it if needed.
@@ -331,6 +348,17 @@ class SequentialMiddleware(BaseMiddleware):
         entry: _QueueEntry | None = None
 
         if lock.locked():
+            # v2.0 parallel-chat: if a submitter is configured, dispatch as
+            # a background task instead of waiting in the per-chat queue.
+            # This gives OpenClaw-style parallel lanes for power users.
+            if self._parallel_submitter is not None:
+                try:
+                    dispatched = await self._parallel_submitter(event)
+                except Exception:
+                    logger.exception("Parallel submitter failed; falling back to queue")
+                    dispatched = False
+                if dispatched:
+                    return None
             entry = self._create_entry(chat_id, event)
             self._pending.setdefault(chat_id, []).append(entry)
             await self._send_indicator(chat_id, entry, event)
