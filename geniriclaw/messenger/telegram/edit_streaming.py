@@ -71,7 +71,8 @@ class _ToolTracker:
             if entry.style == "system":
                 parts.append(f"<blockquote>{escaped}{suffix}</blockquote>")
             else:
-                parts.append(f"<blockquote>Инструмент | {escaped}{suffix}</blockquote>")
+                # v2.0: убран префикс «Инструмент |», название тула самодостаточно.
+                parts.append(f"<blockquote>{escaped}{suffix}</blockquote>")
         return "\n".join(parts)
 
     @property
@@ -143,7 +144,8 @@ class EditStreamEditor:
         """Record a tool event (collapsed with consecutive duplicates)."""
         tool_name = normalize_tool_name(tool_name)
         if self._s.fallen_back:
-            indicator = f"<blockquote>Инструмент | {html.escape(tool_name)}</blockquote>"
+            # v2.0: убран префикс «Инструмент |», название тула самодостаточно.
+            indicator = f"<blockquote>{html.escape(tool_name)}</blockquote>"
             await self._send_new(indicator)
             return
         # Transition text -> tool: seal the text block

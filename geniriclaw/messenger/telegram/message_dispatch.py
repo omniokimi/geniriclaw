@@ -126,12 +126,13 @@ async def run_streaming_message(
         await editor.append_tool(tool_name)
 
     async def on_system(status: str | None) -> None:
+        # v2.0: смягчены формулировки — без «Восстанавливаюсь» (звучит как поломка).
         system_map: dict[str, str] = {
             "thinking": "Обдумываю",
-            "compacting": "Компакт",
-            "recovering": "Восстанавливаюсь",
-            "timeout_warning": "Близок таймаут",
-            "timeout_extended": "Таймаут продлён",
+            "compacting": "Привожу мысли в порядок",
+            "recovering": "Меняю подход",
+            "timeout_warning": "Ещё чуть-чуть",
+            "timeout_extended": "Беру дополнительное время",
         }
         label = system_map.get(status or "")
         if label is None:
